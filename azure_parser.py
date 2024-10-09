@@ -70,27 +70,32 @@ def analyze_layout(doc_number):
     #         "prebuilt-layout", AnalyzeDocumentRequest(url_source=f)
     #     )
     result: AnalyzeResult = poller.result()
+    result_tables=[]
 
     # if result.tables:
     #     for table_idx, table in enumerate(result.tables):
-    #         print(
-    #             f"Table # {table_idx} has {table.row_count} rows and "
-    #             f"{table.column_count} columns"
-    #         )
+    #         result_tables.append(f"Table # {table_idx} has {table.row_count} rows and "
+    #         f"{table.column_count} columns")
+    #         # print(
+    #         #     f"Table # {table_idx} has {table.row_count} rows and "
+    #         #     f"{table.column_count} columns"
+    #         # )
     #         if table.bounding_regions:
     #             for region in table.bounding_regions:
-    #                 print(
-    #                     f"Table # {table_idx} location on page: {region.page_number} is {region.polygon}"
-    #                 )
+    #                 result_tables.append(f"Table # {table_idx} location on page: {region.page_number} is {region.polygon}")
+    #                 # print(
+    #                 #     f"Table # {table_idx} location on page: {region.page_number} is {region.polygon}"
+    #                 # )
     #         for cell in table.cells:
-    #             print(
-    #                 f"...Cell[{cell.row_index}][{cell.column_index}] has text '{cell.content}'"
-    #             )
-    #             if cell.bounding_regions:
-    #                 for region in cell.bounding_regions:
-    #                     print(
-    #                         f"...content on page {region.page_number} is within bounding polygon '{region.polygon}'"
-    #                     )
+    #             result_tables.append(f"...Cell[{cell.row_index}][{cell.column_index}] has text '{cell.content}'")
+    #             # print(
+    #             #     f"...Cell[{cell.row_index}][{cell.column_index}] has text '{cell.content}'"
+    #             # )
+    #             # if cell.bounding_regions:
+    #                 # for region in cell.bounding_regions:
+    #                 #     print(
+    #                 #         f"...content on page {region.page_number} is within bounding polygon '{region.polygon}'"
+    #                 #     )
     return result.tables
 
     
@@ -169,12 +174,17 @@ def llm_output(table_metadata):
     f"""
     I have a table metadata generated from azure document intelligence service. The table metadata will be given in the form of user query.
     First try to find all the columns and rows in the table along with the data in each of the column. 
-    I have another IDEX database with the following columns: Tool (sometimes called Description), length, weight, and OD (outlier diameter. 
+    I have another IDEX database with the following columns: Tool (sometimes called Description), length, weight, and OD (outlier diameter). 
     
     Now I want to extract the data from the table and insert it into the IDEX database. Always see the metric to decide the mapping between the column in the table metadata and IDEX database.
     Make sure that you insert the data into the correct columns.
-    Please return the response only as a valid JSON object. Do not add any extra formatting, code blocks, or tags around the JSON. Do not include explanation or other non-JSON content. Never include ```json``` in the response.
-    The output is converted to dataframe and matplot image. So make sure the output is in correct format.
+    
+    **Output formatting:**
+    Provide the output as raw JSON without any additional formatting or text wrapping.
+    Do not use markdown formatting or code blocks. The output should be pure JSON.
+    Generate a valid JSON object or array without any surrounding text or explanations.
+    Ensure the output is directly parsable as JSON without any need for preprocessing or removal of surrounding text.
+    
     Try to generate the full output from the table metadata. Do not hallucinate or add any extra information. All information should be from `table_metadata`.
     Generate the json output that can be used to insert the data into the IDEX database.
     """
