@@ -178,6 +178,7 @@ def llm_output(table_metadata):
     
     Now I want to extract the data from the table and insert it into the IDEX database. Always see the metric to decide the mapping between the column in the table metadata and IDEX database.
     Make sure that you insert the data into the correct columns.
+    Try to generate the full output from the table metadata. Do not hallucinate or add any extra information. All information should be from `table_metadata`.
     
     **Output formatting:**
     Provide the output as raw JSON without any additional formatting or text wrapping.
@@ -185,8 +186,7 @@ def llm_output(table_metadata):
     Generate a valid JSON object or array without any surrounding text or explanations.
     Ensure the output is directly parsable as JSON without any need for preprocessing or removal of surrounding text.
     
-    Try to generate the full output from the table metadata. Do not hallucinate or add any extra information. All information should be from `table_metadata`.
-    Generate the json output that can be used to insert the data into the IDEX database.
+    
     """
     )
     prompt= f'This is the table metadata {table_metadata}.'
@@ -216,7 +216,7 @@ if __name__ == '__main__':
     table_metadata = {}
     data_json = {}
 
-    for doc_number in range(1, 7):
+    for doc_number in range(1, 8):
         print(f'Processing document {doc_number}...')
         
         # Store the result of analyze_layout in the dictionary
