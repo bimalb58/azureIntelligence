@@ -87,8 +87,6 @@ parser= LlamaParse(
     verbose=True,
 )
 
-
-
 parsed_doc= parser.load_data('./test_doc.pdf')
 
 # parsed_list= [doc.text for doc in parsed_doc]
