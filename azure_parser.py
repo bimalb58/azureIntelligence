@@ -54,9 +54,9 @@ def _in_span(word, spans):
     return False
 
 
-def analyze_layout():
+def analyze_layout(doc_number):
     # sample document
-    formUrl = "https://raw.githubusercontent.com/bimalb58/azureIntelligence//main/test_doc.pdf"
+    formUrl = f"https://raw.githubusercontent.com/bimalb58/azureIntelligence//main/test_{doc_number}.pdf"
 
     document_intelligence_client = DocumentIntelligenceClient(
         endpoint=AZURE_FORM_RECOGNIZER_ENDPOINT, credential=AzureKeyCredential(AZURE_FORM_RECOGNIZER_KEY)
@@ -132,11 +132,7 @@ def analyze_layout():
     #     wb.save("result_tables.xlsx")
  
     # print("Data has been written to 'result_tables.xlsx'")
-    
-table_metadata= analyze_layout()
-# print(f'table metadata is {table_metadata}')
 
-#make nice table out of json data
 def json_to_table(json_string):
     try:
         # Parse the JSON string
@@ -158,6 +154,13 @@ def json_to_table(json_string):
         return "Error: Empty JSON array"
     except Exception as e:
         return f"Error: {str(e)}"
+
+
+
+# print(f'table metadata is {table_metadata}')
+
+#make nice table out of json data
+
 
 
 def llm_output(table_metadata):
@@ -184,31 +187,8 @@ def llm_output(table_metadata):
         }])
     return response.choices[0].message.content
 
-data_json= llm_output(table_metadata)
 
-try:
-    data = json.loads(data_json)
-except json.JSONDecodeError as e:
-    print(f"Error parsing JSON: {e}")
-    print(f"Received data: {data_json}")
-    exit(1)
-
-# result= json.dumps(json_output)
-# cleaned_data= data.replace("json", "").strip()
-# cleaned_data= cleaned_data.replace("```", "").strip()
-# print("Result:")
-# print(result)
-# cleaned_data= json.loads(cleaned_data)
-
-# print(f'cleaned data is {cleaned_data}')
-
-df = pd.DataFrame(data)
-print(f'Table:\n {df}')
-#save dataframe as csv
-df.to_csv('table_metadata.csv', index=False)
-
-# Define a function to save as PNG
-def save_as_png(df, filename='table.png'):
+def save_as_png(df, filename):
     fig, ax = plt.subplots(figsize=(12, len(df)*0.5))  # Adjust the figure size based on rows
     ax.axis('tight')
     ax.axis('off')
@@ -216,28 +196,27 @@ def save_as_png(df, filename='table.png'):
 
     plt.savefig(filename, bbox_inches='tight', dpi=300)
     plt.close()
-    
-# # Define a function to save as PDF
-# def save_as_pdf(df, filename='table.pdf'):
-#     pdf = SimpleDocTemplate(filename, pagesize=letter)
-#     table_data = [df.columns.to_list()] + df.values.tolist()
-    
-#     # Create a table
-#     table = Table(table_data)
-    
-#     # Add style to table
-#     style = TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-#                         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-#                         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-#                         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-#                         ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-#                         ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-#                         ('GRID', (0, 0), (-1, -1), 1, colors.black)])
-#     table.setStyle(style)
-    
-#     # Build PDF
-#     elems = []
-#     elems.append(table)
-#     pdf.build(elems)
 
-save_as_png(df, 'tools_table.png')
+
+
+if __name__ == '__main__':
+
+    for doc_number in range(1, 7):
+        print(f'Processing document {doc_number}...')
+        f'table_metadata_{doc_number}'== analyze_layout(doc_number)
+
+
+        f'data_json_{doc_number}'== llm_output(f'table_metadata_{doc_number}')
+
+        try:
+            data = json.loads(f'data_json_{doc_number}')
+        except json.JSONDecodeError as e:
+            print(f"Error parsing JSON: {e}")
+            print(f"Received data: {data_json}")
+            exit(1)
+
+        df = pd.DataFrame(data)
+
+        df.to_csv(f'table_metadata_{doc_number}.csv', index=False)
+
+        save_as_png(df, f'table_{doc_number}.png')
