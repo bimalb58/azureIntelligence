@@ -14,10 +14,10 @@ load_dotenv()
 
 
 import pandas as pd
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+
 
 #load from environment variables
 AZURE_FORM_RECOGNIZER_ENDPOINT= os.getenv("AZURE_FORM_RECOGNIZER_ENDPOINT")
@@ -163,16 +163,18 @@ def json_to_table(json_string):
 
 
 
+
 def llm_output(table_metadata):
     system_prompt=(
-    """
+    f"""
     I have a table metadata generated from azure document intelligence service. The table metadata will be given in the form of user query.
     First try to find all the columns and rows in the table along with the data in each of the column. 
     I have another IDEX database with the following columns: Tool (sometimes called Description), length, weight, and OD (outlier diameter. 
     
     Now I want to extract the data from the table and insert it into the IDEX database. Always see the metric to decide the mapping between the column in the table metadata and IDEX database.
     Make sure that you insert the data into the correct columns.
-    Please return the response only as a valid JSON object. Do not add any extra formatting, code blocks, or tags around the JSON. Do not include explanation or other non-JSON content.
+    Please return the response only as a valid JSON object. Do not add any extra formatting, code blocks, or tags around the JSON. Do not include explanation or other non-JSON content. Never include ```json``` in the response.
+    The output is converted to dataframe and matplot image. So make sure the output is in correct format.
     Try to generate the full output from the table metadata. Do not hallucinate or add any extra information. All information should be from `table_metadata`.
     Generate the json output that can be used to insert the data into the IDEX database.
     """
@@ -201,22 +203,29 @@ def save_as_png(df, filename):
 
 if __name__ == '__main__':
 
+    table_metadata = {}
+    data_json = {}
+
     for doc_number in range(1, 7):
         print(f'Processing document {doc_number}...')
-        f'table_metadata_{doc_number}'== analyze_layout(doc_number)
-
-
-        f'data_json_{doc_number}'== llm_output(f'table_metadata_{doc_number}')
-
+        
+        # Store the result of analyze_layout in the dictionary
+        table_metadata[doc_number] = analyze_layout(doc_number)
+        
+        # Store the result of llm_output in the dictionary
+        data_json[doc_number] = llm_output(table_metadata[doc_number])
+        print(data_json[doc_number])
+        
         try:
-            data = json.loads(f'data_json_{doc_number}')
+            data = json.loads(data_json[doc_number])
         except json.JSONDecodeError as e:
             print(f"Error parsing JSON: {e}")
-            print(f"Received data: {data_json}")
             exit(1)
-
+        
         df = pd.DataFrame(data)
-
+        
+        # Save DataFrame to CSV
         df.to_csv(f'table_metadata_{doc_number}.csv', index=False)
-
+        
+        # Save DataFrame as PNG
         save_as_png(df, f'table_{doc_number}.png')
